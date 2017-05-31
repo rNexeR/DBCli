@@ -47,6 +47,22 @@ namespace FileDBCLi
 
             });
 
+            app.Command("list", (command) =>
+            {
+                command.Description = "Use <tables>";
+                command.HelpOption("-h|--help");
+
+                var nameArgument = command.Argument("[name]", "Name of the Database");
+
+                command.OnExecute(() =>
+                {
+                    db.ListTables();
+
+                    return 0;
+                });
+
+            });
+
             app.Command("create", (command) =>
             {
 

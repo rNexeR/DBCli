@@ -137,5 +137,14 @@ namespace FileDB
         {
             return current_db_name;
         }
+
+        public void ListTables(){
+            Console.WriteLine("--------");
+            foreach (var item in this.table_list)
+            {
+                Console.WriteLine(item);
+            }
+            Console.WriteLine("--------");
+        }
     }
 }
