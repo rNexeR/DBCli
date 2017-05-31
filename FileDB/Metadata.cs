@@ -18,7 +18,9 @@ namespace FileDB
                 }
             }
 
-            Console.WriteLine($"Next free block: {GetFreeBlock()}");
+            StoreBitmap();
+
+            PrintDebug($"Next free block: {GetFreeBlock()}");
         }
 
         private void LoadMetadata(){
@@ -27,6 +29,7 @@ namespace FileDB
         }
 
         private void LoadTables(){
+            this.table_list = new Dictionary<string, int>();
             var current_pos = 0;
             var lista_bytes = new List<byte>();
             for(var i = 0; i < this.table_list_blocks; i++){
@@ -34,15 +37,18 @@ namespace FileDB
                 lista_bytes.AddRange(arr);
             }
 
-            while(true){
+            while(lista_bytes.Count > 0){
                 var temp = new List<byte>();
                 var current = lista_bytes[current_pos];
                 while(current != '\0'){
                     temp.Add(lista_bytes[current_pos++]);
+                    current = lista_bytes[current_pos];
                 }
 
                 var name = this.ToString(temp.ToArray());
                 temp = new List<byte>();
+
+                current_pos++;
                 
                 for(int i = 0; i < 4; i++){
                     temp.Add(lista_bytes[current_pos++]);
@@ -51,7 +57,7 @@ namespace FileDB
 
                 if(name != ""){
                     this.table_list[name] = block;
-                    Console.WriteLine($"Discovered table {name} at {block}");
+                    PrintDebug($"Discovered table {name} at {block}");
                 }
 
                 if(lista_bytes[current_pos++] == '\0' && lista_bytes[current_pos] == '\0'){
@@ -64,11 +70,28 @@ namespace FileDB
 
         private void StoreDBMetadata(){
             StoreBitmap();
-            StoreTables();
+            StoreDBTables();
         }
 
-        private void StoreTables(){
+        private void StoreDBTables(){
+            PrintDebug("Store Tables");
+            var bytes = new List<byte>();
+            foreach(var item in this.table_list){
+                bytes.AddRange(this.FromString(item.Key));
+                bytes.Add(new byte());
+                bytes.AddRange(this.FromInt(item.Value));
+                bytes.Add(new byte());
+            }
 
+            var emptyBlock = new byte[this.block_size-4];
+            this.WriteBlock(emptyBlock, (int)this.bm_blocks, 0);
+            this.WriteBlock(emptyBlock, (int)this.bm_blocks+1, 0);
+
+            var current_block = bm_blocks;
+            for(var i = 0; i < bytes.Count && current_block < bm_blocks + 2; i+= this.block_size -4){
+                PrintDebug($"Writting block {(int)current_block++}");
+                this.WriteBlock(bytes.ToArray(), (int)current_block++, i);
+            }
         }
     }
 }

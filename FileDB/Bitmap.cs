@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Collections;
 using System.IO;
+using System;
 
 namespace FileDB
 {
@@ -64,7 +65,11 @@ namespace FileDB
 
         private void SetUnusedBlock(int pos)
         {
+            var emptyBlock = new byte[this.block_size-4];
+            this.WriteBlock(emptyBlock, pos, 0);
+            this.LinkBlocks(pos, 0);
             this.bitmap.Set(pos, false);
         }
+
     }
 }

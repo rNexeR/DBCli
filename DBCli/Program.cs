@@ -28,6 +28,8 @@ namespace DBCli
 
             // Console.WriteLine($"sizeof int {sizeof(int)} \nsizeof char {sizeof(char)} \nsizeof double {sizeof(double)}");
 
+            Console.WriteLine($"--> {(Convert.ToByte(true)) == '\0'}");
+
             string input;
             string[] arguments;
 

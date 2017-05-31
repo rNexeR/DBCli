@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using FileDB;
 using Microsoft.Extensions.CommandLineUtils;
 
@@ -49,14 +50,28 @@ namespace FileDBCLi
 
             app.Command("list", (command) =>
             {
-                command.Description = "Use <tables>";
+                command.Description = "List tables";
                 command.HelpOption("-h|--help");
-
-                var nameArgument = command.Argument("[name]", "Name of the Database");
 
                 command.OnExecute(() =>
                 {
                     db.ListTables();
+
+                    return 0;
+                });
+
+            });
+
+            app.Command("def", (command) =>
+            {
+                command.Description = "Use <tables>";
+                command.HelpOption("-h|--help");
+
+                var nameArgument = command.Argument("[name]", "Name of the Table");
+
+                command.OnExecute(() =>
+                {
+                    db.DefTable(nameArgument.Value);
 
                     return 0;
                 });
@@ -76,7 +91,7 @@ namespace FileDBCLi
                                 CommandOptionType.SingleValue);
 
                 var colsDefinition = command.Option("-c|--columns",
-                                "Size of the database.",
+                                "Columns of the table.",
                                 CommandOptionType.MultipleValue);
 
 
@@ -164,6 +179,30 @@ namespace FileDBCLi
                 });
             });
 
+            app.Command("select", (command) =>
+            {
+                command.Description = "Select row(s) from table";
+                command.HelpOption("-h|--help");
+
+                var tableName = command.Argument("[table]", "Table to select");
+                var whereOption = command.Option("-w|--where",
+                                "What rows do you need.",
+                                CommandOptionType.SingleValue);
+                var columnsOption = command.Option("-c|--columns",
+                                "What cols do you need.",
+                                CommandOptionType.MultipleValue);
+
+                var def_value = new List<string>();
+                def_value.Add("*");
+
+                command.OnExecute(() =>
+                {
+                    db.SelectRowsWhere(tableName.Value, whereOption.HasValue() ? whereOption.Value() : "", columnsOption.HasValue() ? columnsOption.Values : def_value);
+
+                    return 0;
+                });
+            });
+
             app.Command("delete", (command) =>
             {
                 command.Description = "Update a row into a table";
@@ -176,32 +215,27 @@ namespace FileDBCLi
 
                 command.OnExecute(() =>
                 {
-
-                    if (whereOption.HasValue())
-                    {
-                        db.DeleteRowsWhere(tableName.Value, whereOption.Value());
-                    }
-                    else
-                    {
-                        db.DeleteRows(tableName.Value);
-                    }
+                    db.DeleteRowsWhere(tableName.Value, whereOption.HasValue() ? whereOption.Value() : "");
 
                     return 0;
                 });
             });
         }
 
-        public string GetCurrentDB(){
+        public string GetCurrentDB()
+        {
             return db.GetCurrentDB();
         }
 
         public void Execute(string[] args)
         {
+            GC.Collect();
             this.InitializeCli();
             app.Execute(args);
         }
 
-        public void Dispose(){
+        public void Dispose()
+        {
             db.Dispose();
         }
     }
